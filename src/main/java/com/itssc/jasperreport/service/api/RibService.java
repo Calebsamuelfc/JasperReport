@@ -2,10 +2,8 @@ package com.itssc.jasperreport.service.api;
 
 import com.itssc.jasperreport.dto.request.RequestHeaders;
 import com.itssc.jasperreport.dto.request.RibRequestDTO;
-import com.itssc.jasperreport.dto.response.RibResponse;
-
-import java.util.Map;
+import com.itssc.jasperreport.dto.response.ServiceResponse;
 
 public interface RibService {
-    RibResponse downloadRib(RequestHeaders headers, RibRequestDTO ribRequest);
+    ServiceResponse downloadRib(RequestHeaders headers, RibRequestDTO ribRequest);
 }

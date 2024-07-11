@@ -2,7 +2,7 @@ package com.itssc.jasperreport.service.impl;
 
 import com.itssc.jasperreport.dto.request.RequestHeaders;
 import com.itssc.jasperreport.dto.request.RibRequestDTO;
-import com.itssc.jasperreport.dto.response.RibResponse;
+import com.itssc.jasperreport.dto.response.ServiceResponse;
 import com.itssc.jasperreport.models.KVTableInfo;
 import com.itssc.jasperreport.service.api.RibService;
 import com.itssc.jasperreport.utils.ResourceUtil;
@@ -22,7 +22,7 @@ import java.util.*;
 public class RibServiceImpl implements RibService {
     private static final Logger logger = LogManager.getLogger(RibServiceImpl.class);
     @Override
-    public RibResponse  downloadRib(RequestHeaders headers, RibRequestDTO ribRequest) {
+    public ServiceResponse downloadRib(RequestHeaders headers, RibRequestDTO ribRequest) {
         Map<String,Object> parameters = new HashMap<>();
         parameters.put("fullName", ribRequest.getFullname());
         parameters.put("currency", ribRequest.getCurrency());
@@ -49,7 +49,7 @@ public class RibServiceImpl implements RibService {
             byte[] pdfBytes = JasperExportManager.exportReportToPdf(jasperPrint);
             String base64String = Base64.getEncoder().encodeToString(pdfBytes);
 
-            return RibResponse.builder()
+            return ServiceResponse.builder()
                     .base64String(base64String)
                     .responseStatus("success")
                     .responseCode("200")
