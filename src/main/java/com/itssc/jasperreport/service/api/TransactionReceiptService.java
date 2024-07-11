@@ -1,8 +1,8 @@
 package com.itssc.jasperreport.service.api;
 
 import com.itssc.jasperreport.dto.request.TransactionReceiptRequestDTO;
-import com.itssc.jasperreport.dto.response.RibResponse;
+import com.itssc.jasperreport.dto.response.ServiceResponse;
 
 public interface TransactionReceiptService {
-    RibResponse downloadSingleTransactionReceipt(TransactionReceiptRequestDTO transactionReceiptRequestDTO);
+    ServiceResponse downloadSingleTransactionReceipt(TransactionReceiptRequestDTO transactionReceiptRequestDTO);
 }

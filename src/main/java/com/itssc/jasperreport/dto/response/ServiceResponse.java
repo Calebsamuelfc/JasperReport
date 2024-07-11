@@ -8,7 +8,7 @@ import lombok.*;
 @Setter
 @Builder
 @ToString
-public class RibResponse {
+public class ServiceResponse {
     private String responseCode;
     private String responseStatus;
     private String base64String;

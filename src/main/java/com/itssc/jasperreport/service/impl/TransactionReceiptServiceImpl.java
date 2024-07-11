@@ -1,7 +1,7 @@
 package com.itssc.jasperreport.service.impl;
 
 import com.itssc.jasperreport.dto.request.TransactionReceiptRequestDTO;
-import com.itssc.jasperreport.dto.response.RibResponse;
+import com.itssc.jasperreport.dto.response.ServiceResponse;
 import com.itssc.jasperreport.models.KVTableInfo;
 import com.itssc.jasperreport.service.api.TransactionReceiptService;
 import com.itssc.jasperreport.utils.LocalDateFormatUtil;
@@ -22,7 +22,7 @@ import java.util.*;
 public class TransactionReceiptServiceImpl implements TransactionReceiptService {
 
     @Override
-    public RibResponse downloadSingleTransactionReceipt(TransactionReceiptRequestDTO transactionReceiptRequestDTO) {
+    public ServiceResponse downloadSingleTransactionReceipt(TransactionReceiptRequestDTO transactionReceiptRequestDTO) {
         Map<String, Object> parameters = new HashMap<>();
         Locale locale = Locale.ENGLISH;
         if(transactionReceiptRequestDTO.getLegalEntityId().equalsIgnoreCase("SL6940001") || transactionReceiptRequestDTO.getLegalEntityId().equalsIgnoreCase("GM2700001")){
@@ -48,7 +48,7 @@ public class TransactionReceiptServiceImpl implements TransactionReceiptService 
             jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, (JRDataSource)new JREmptyDataSource());
             byte[] pdfBytes = JasperExportManager.exportReportToPdf(jasperPrint);
             String base64String = Base64.getEncoder().encodeToString(pdfBytes);
-            return RibResponse.builder()
+            return ServiceResponse.builder()
                     .base64String(base64String)
                     .responseStatus("success")
                     .responseCode("200")
