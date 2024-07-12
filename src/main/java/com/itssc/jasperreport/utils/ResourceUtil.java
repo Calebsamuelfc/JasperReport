@@ -20,6 +20,13 @@ public class ResourceUtil {
             return "templates/vistaBankReportFrench.jrxml";
         }
     }
+    public static String getContractTemplate(String legalEntityId){
+        if (legalEntityId.equalsIgnoreCase("GM2700001") || legalEntityId.equalsIgnoreCase("SL6940001")) {
+            return "templates/listOfcontract.jrxml";
+        } else {
+            return "templates/listOfcontract French.jrxml";
+        }
+    }
 
     public static String getHeaderImagePath(String legalEntityId){
         if (legalEntityId.equalsIgnoreCase("GN2240001")) {
