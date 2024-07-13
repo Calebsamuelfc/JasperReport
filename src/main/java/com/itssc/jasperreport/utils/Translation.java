@@ -49,9 +49,20 @@ public enum Translation {
     DESCRIPTION("Description","Description"),
     ACCOUNT("Account","Compte"),
     TRANSACTIONREFERENCE("Transaction Reference","Référence de Transaction"),
+    TRANSACTIONRECEIPTTITLE("Transaction Receipt","Rede Transaction"),
     TRANSACTIONAMOUNT("Transaction Amount","Montant de la Transaction"),
     CARDNAME("CARD NAME", "Nom de la carte"),
-    TRANSACTIONRECEIPTTITLE("Transaction Receipt","Rede Transaction");
+    FROMDATE("fromdate","date de début"),
+    GENERATEDBY("generatedby","généré par"),
+    GENERATEDON("generatedon","date de génération"),
+    BANKNAME("bankname","nom de la banque"),
+    TODATE("todate","date d'arrivée"),
+    USERID("userid","identifiant utilisateur"),
+    ADDRESS("address","adresse"),
+    TELEPHONE("telephone","téléphone"),
+    EMAIL("email","email"),
+    TITLE("title","titre"),
+    BRANCH("branch","branche");
 
 
 
