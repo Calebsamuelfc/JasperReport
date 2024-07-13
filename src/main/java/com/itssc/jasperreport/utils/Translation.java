@@ -54,8 +54,7 @@ public enum Translation {
     TRANSACTIONRECEIPTTITLE("Transaction Receipt","Rede Transaction"),
     PILGRIMNAME("Pilgrim's Name","Nom du pèlerin"),
     HAJJRECEIPTTITLE("Hajj Transaction Receipt","Hadj Rede Transaction"),
-    OUSTANDINGBALANCE("Outstanding Balance","Solde Impayé");
-    TRANSACTIONRECEIPTTITLE("Transaction Receipt","Rede Transaction"),
+    OUSTANDINGBALANCE("Outstanding Balance","Solde Impayé"),
     CONTRACTREPORTS("CONTRACT REPORTS","RAPPORTS DE CONTRAT");
 
 
