@@ -65,7 +65,8 @@ public enum Translation {
     TELEPHONE("telephone","téléphone"),
     EMAIL("email","email"),
     TITLE("title","titre"),
-    BRANCH("branch","branche");
+    BRANCH("branch","branche"),
+    CONTRACTREPORTS("CONTRACT REPORTS","RAPPORTS DE CONTRAT");
 
 
 
