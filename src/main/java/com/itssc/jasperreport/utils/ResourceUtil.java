@@ -21,6 +21,13 @@ public class ResourceUtil {
         }
     }
 
+    public static String getSingleStatmentTemplate(String legalEntityId){
+        if (legalEntityId.equalsIgnoreCase("GM2700001") || legalEntityId.equalsIgnoreCase("SL6940001")) {
+            return "templates/acctStatmentEnglish.jrxml";
+        } else {
+            return "templates/acctStatmentFrench.jrxml";
+        }
+    }
     public static String getCombinedStatementReceiptTemplate(String legalEntityId){
         if (legalEntityId.equalsIgnoreCase("GM2700001") || legalEntityId.equalsIgnoreCase("SL6940001")) {
             return "templates/combinedstatementEnglish.jrxml";

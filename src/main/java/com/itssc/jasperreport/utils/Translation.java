@@ -65,7 +65,15 @@ public enum Translation {
     TELEPHONE("telephone","téléphone"),
     EMAIL("email","email"),
     TITLE("title","titre"),
-    BRANCH("branch","branche");
+    BRANCH("branch","branche"),
+    CLOSINGBALANCE("Closing Balance", "Solde de clôture"),
+    STARTDATE("Start Date", "Date de début"),
+    ENDDATE("End Date", "Date de fin"),
+    FILEFORMAT("File Format", "Format de fichier"),
+    ACCOUNTNAME("Account Name:","Nom du compte:"),
+    SUMDEBIT("Sum of Debits:","Somme des débits:"),
+    SUMCREDIT("Sum of Credits:","Somme des crédit:"),
+    OPENINGBALANCE("Opening Balance:","Solde initial:");
 
 
 
