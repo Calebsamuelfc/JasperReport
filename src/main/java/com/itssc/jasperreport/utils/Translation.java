@@ -66,6 +66,8 @@ public enum Translation {
     EMAIL("email","email"),
     TITLE("title","titre"),
     BRANCH("branch","branche"),
+    CONTRACTREPORTS("CONTRACT REPORTS","RAPPORTS DE CONTRAT"),
+    BRANCH("branch","branche"),
     CLOSINGBALANCE("Closing Balance", "Solde de clôture"),
     STARTDATE("Start Date", "Date de début"),
     ENDDATE("End Date", "Date de fin"),
