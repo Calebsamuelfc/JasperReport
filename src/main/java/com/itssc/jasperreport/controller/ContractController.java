@@ -1,11 +1,9 @@
 package com.itssc.jasperreport.controller;
 
 import com.itssc.jasperreport.dto.request.RequestHeaders;
-import com.itssc.jasperreport.dto.request.TransactionReceiptRequestDTO;
-import com.itssc.jasperreport.dto.request.downloadContractRequestDTO;
+import com.itssc.jasperreport.dto.request.ContractRequestDTO;
 import com.itssc.jasperreport.dto.response.DefaultResponse;
-import com.itssc.jasperreport.service.api.DownloadContractService;
-import com.itssc.jasperreport.service.api.TransactionReceiptService;
+import com.itssc.jasperreport.service.api.ContractService;
 import com.itssc.jasperreport.utils.Responder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,9 +16,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/JasperReports/api/v1")
-public class DownloadContractController {
+public class ContractController {
 
-    private final DownloadContractService downloadContractService;
+    private final ContractService downloadContractService;
     @PostMapping("/downloadContract")
     public ResponseEntity<DefaultResponse> downloadContract(
             @RequestHeader("legalEntityId") String legalEntityId,
@@ -28,7 +26,7 @@ public class DownloadContractController {
             @RequestHeader("applicationID") String applicationID,
             @RequestHeader("APIKey") String ClientAPIKey,
             @RequestHeader("hash") String hash,
-            @RequestBody downloadContractRequestDTO downloadContractRequestDTO) {
+            @RequestBody ContractRequestDTO ContractRequestDTO) {
 
         RequestHeaders headers = new RequestHeaders();
         headers.setAuthenticationID(authenticationID);
@@ -37,8 +35,8 @@ public class DownloadContractController {
         headers.setLegalEntityId(legalEntityId);
         headers.setHash(hash);
 
-        downloadContractRequestDTO.setLegalEntityId(legalEntityId);
-        return Responder.success(downloadContractService.DownloadContract(downloadContractRequestDTO));
+        ContractRequestDTO.setLegalEntityId(legalEntityId);
+        return Responder.success(downloadContractService.DownloadContract(ContractRequestDTO));
 }
 
 }

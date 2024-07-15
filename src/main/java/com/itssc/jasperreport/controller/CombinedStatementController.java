@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/JasperReports/api/v1")
-public class DownloadCombinedStatementController {
+public class CombinedStatementController {
     private final CombinedStatementReceiptService combinedStatementReceiptService;
 
     @PostMapping("/downloadCombinedStatement")

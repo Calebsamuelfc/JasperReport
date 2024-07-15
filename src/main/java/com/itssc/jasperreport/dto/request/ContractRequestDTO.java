@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class downloadContractRequestDTO {
+public class ContractRequestDTO {
     private String base64String;
     private String title;
     private String name;

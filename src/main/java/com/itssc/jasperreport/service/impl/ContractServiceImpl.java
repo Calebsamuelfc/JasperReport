@@ -1,13 +1,11 @@
 package com.itssc.jasperreport.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.itssc.jasperreport.dto.request.downloadContractRequestDTO;
+import com.itssc.jasperreport.dto.request.ContractRequestDTO;
 import com.itssc.jasperreport.dto.response.ServiceResponse;
 import com.itssc.jasperreport.models.ContractInfo;
-import com.itssc.jasperreport.models.KVTableInfo;
-import com.itssc.jasperreport.service.api.DownloadContractService;
+import com.itssc.jasperreport.service.api.ContractService;
 import com.itssc.jasperreport.utils.LocalDateFormatUtil;
 import com.itssc.jasperreport.utils.Masker;
 import com.itssc.jasperreport.utils.ResourceUtil;
@@ -24,28 +22,28 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
-public class DownloadContractServiceImpl implements DownloadContractService {
+public class ContractServiceImpl implements ContractService {
 
     @Override
-    public ServiceResponse DownloadContract(downloadContractRequestDTO downloadContractRequestDTO) {
+    public ServiceResponse DownloadContract(ContractRequestDTO ContractRequestDTO) {
         Map<String, Object> parameters = new HashMap<>();
         Locale locale;
-        if (downloadContractRequestDTO.getLegalEntityId().equalsIgnoreCase("SL6940001") || downloadContractRequestDTO.getLegalEntityId().equalsIgnoreCase("GM2700001")) {
+        if (ContractRequestDTO.getLegalEntityId().equalsIgnoreCase("SL6940001") || ContractRequestDTO.getLegalEntityId().equalsIgnoreCase("GM2700001")) {
             locale = Locale.ENGLISH;
         } else {
             locale = Locale.FRENCH;
         }
 
-        parameters.put("imageLogo", ResourceUtil.getImagePath(downloadContractRequestDTO.getLegalEntityId()));
-        parameters.put("imgBackground", ResourceUtil.getBackgroundImgPath(downloadContractRequestDTO.getLegalEntityId()));
+        parameters.put("imageLogo", ResourceUtil.getImagePath(ContractRequestDTO.getLegalEntityId()));
+        parameters.put("imgBackground", ResourceUtil.getBackgroundImgPath(ContractRequestDTO.getLegalEntityId()));
         parameters.put("title", Translation.CONTRACTREPORTS.getTranslation(locale));
-        parameters.put("date", LocalDateFormatUtil.formatFullDate(downloadContractRequestDTO.getLegalEntityId(), LocalDate.now().toString()));
-        parameters.put("fullDate", LocalDateFormatUtil.formatFullDate(downloadContractRequestDTO.getLegalEntityId(), LocalDate.now().toString()));
+        parameters.put("date", LocalDateFormatUtil.formatFullDate(ContractRequestDTO.getLegalEntityId(), LocalDate.now().toString()));
+        parameters.put("fullDate", LocalDateFormatUtil.formatFullDate(ContractRequestDTO.getLegalEntityId(), LocalDate.now().toString()));
 
-        JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(getContractInfo(downloadContractRequestDTO));
+        JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(getContractInfo(ContractRequestDTO));
         parameters.put("contractData", dataSource);
 
-        InputStream stream = DownloadContractServiceImpl.class.getClassLoader().getResourceAsStream(ResourceUtil.getContractTemplate(downloadContractRequestDTO.getLegalEntityId()));
+        InputStream stream = ContractServiceImpl.class.getClassLoader().getResourceAsStream(ResourceUtil.getContractTemplate(ContractRequestDTO.getLegalEntityId()));
 
         JasperReport jasperReport = null;
 
@@ -68,7 +66,7 @@ public class DownloadContractServiceImpl implements DownloadContractService {
               return null;
     }
 
-    public List<ContractInfo> getContractInfo(downloadContractRequestDTO downloadContractRequestDTO){
+    public List<ContractInfo> getContractInfo(ContractRequestDTO ContractRequestDTO){
         final ObjectMapper objectMapper = new ObjectMapper();
 
         String Email = "N/A";
@@ -79,7 +77,7 @@ public class DownloadContractServiceImpl implements DownloadContractService {
         String CoreCustomerId = "N/A";
 
         List<ContractInfo> contractInfoList = new ArrayList<>();
-        byte[] decodedBytes = Base64.getDecoder().decode(downloadContractRequestDTO.getBase64String());
+        byte[] decodedBytes = Base64.getDecoder().decode(ContractRequestDTO.getBase64String());
         String decodedString = new String(decodedBytes);
 
         try {
