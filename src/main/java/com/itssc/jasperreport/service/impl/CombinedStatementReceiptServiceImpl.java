@@ -4,10 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itssc.jasperreport.dto.request.CombinedStatementRequestDTO;
 import com.itssc.jasperreport.dto.request.TransactionReceiptRequestDTO;
+import com.itssc.jasperreport.dto.response.MobileServiceResponse;
 import com.itssc.jasperreport.dto.response.ServiceResponse;
 import com.itssc.jasperreport.models.KVTableInfo;
 import com.itssc.jasperreport.models.NewCombinedTransactionInfo;
 import com.itssc.jasperreport.service.api.CombinedStatementReceiptService;
+import com.itssc.jasperreport.utils.FileUtil;
 import com.itssc.jasperreport.utils.LocalDateFormatUtil;
 import com.itssc.jasperreport.utils.ResourceUtil;
 import com.itssc.jasperreport.utils.Translation;
@@ -27,18 +29,34 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class CombinedStatementReceiptServiceImpl implements CombinedStatementReceiptService {
+    // Lets Default locale here
+    private Map<String, Object> parameters = new HashMap<>();
+    private Locale locale = Locale.ENGLISH;
+
     @Override
     public ServiceResponse downloadCombinedStatementReceipt(CombinedStatementRequestDTO combinedStatementRequestDTO) {
-        Map<String, Object> parameters = new HashMap<>();
-        Locale locale = Locale.ENGLISH;
+        System.out.println("enter here"+generateServiceResponse(combinedStatementRequestDTO));
+        setupParameters(combinedStatementRequestDTO);
+        return generateServiceResponse(combinedStatementRequestDTO);
+    }
+
+    @Override
+    public MobileServiceResponse downloadCombinedStatementReceiptMobile(CombinedStatementRequestDTO combinedStatementRequestDTO) {
+        setupParameters(combinedStatementRequestDTO);
+        return generateMobileServiceResponse(combinedStatementRequestDTO);
+    }
+
+    // Parameters setup logic
+    private void setupParameters(CombinedStatementRequestDTO combinedStatementRequestDTO) {
         if(combinedStatementRequestDTO.getLegalEntityId().equalsIgnoreCase("SL6940001") || combinedStatementRequestDTO.getLegalEntityId().equalsIgnoreCase("GM2700001")){
             locale = Locale.ENGLISH;
-        }else{
+        } else {
             locale = Locale.FRENCH;
         }
+
         parameters.put("imgLogo", ResourceUtil.getImagePath(combinedStatementRequestDTO.getLegalEntityId()));
         parameters.put("imgBackground", ResourceUtil.getBackgroundImgPath(combinedStatementRequestDTO.getLegalEntityId()));
-        parameters.put("title", Translation.TRANSACTIONRECEIPTTITLE.getTranslation(locale));
+        parameters.put("title", Translation.TITLE.getTranslation(locale));
         parameters.put("fullDate", LocalDateFormatUtil.formatFullDate(combinedStatementRequestDTO.getLegalEntityId(), LocalDate.now().toString()));
 
         String bankName = StringUtils.isBlank(combinedStatementRequestDTO.getBankName()) ? "N/A" : combinedStatementRequestDTO.getBankName();
@@ -53,17 +71,16 @@ public class CombinedStatementReceiptServiceImpl implements CombinedStatementRec
         parameters.put("generatedBy", generatedBy);
         parameters.put("generatedOn", generatedOn);
 
-
         JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(getCombinedStatementInfo(combinedStatementRequestDTO));
         parameters.put("dataSource", dataSource);
+    }
 
-        InputStream stream = TransactionReceiptServiceImpl.class.getClassLoader().getResourceAsStream(ResourceUtil.getCombinedStatementReceiptTemplate(combinedStatementRequestDTO.getLegalEntityId()));
-
-        JasperReport jasperReport = null;
+    // Generate ServiceResponse for web here
+    private ServiceResponse generateServiceResponse(CombinedStatementRequestDTO combinedStatementRequestDTO) {
         try {
-            jasperReport = JasperCompileManager.compileReport(stream);
-            JasperPrint jasperPrint = new JasperPrint();
-            jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, (JRDataSource)new JREmptyDataSource());
+            InputStream stream = CombinedStatementReceiptServiceImpl.class.getClassLoader().getResourceAsStream(ResourceUtil.getCombinedStatementReceiptTemplate(combinedStatementRequestDTO.getLegalEntityId()));
+            JasperReport jasperReport = JasperCompileManager.compileReport(stream);
+            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, (JRDataSource)new JREmptyDataSource());
             byte[] pdfBytes = JasperExportManager.exportReportToPdf(jasperPrint);
             String base64String = Base64.getEncoder().encodeToString(pdfBytes);
             return ServiceResponse.builder()
@@ -77,6 +94,26 @@ public class CombinedStatementReceiptServiceImpl implements CombinedStatementRec
         }
         return null;
     }
+
+    // Generate MobileServiceResponse for mobile here
+    private MobileServiceResponse generateMobileServiceResponse(CombinedStatementRequestDTO combinedStatementRequestDTO) {
+        try {
+            InputStream stream = CombinedStatementReceiptServiceImpl.class.getClassLoader().getResourceAsStream(ResourceUtil.getCombinedStatementReceiptTemplate(combinedStatementRequestDTO.getLegalEntityId()));
+            JasperReport jasperReport = JasperCompileManager.compileReport(stream);
+            JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, (JRDataSource)new JREmptyDataSource());
+            byte[] pdfBytes = JasperExportManager.exportReportToPdf(jasperPrint);
+            String fileName = FileUtil.saveFile(pdfBytes);
+            return MobileServiceResponse.builder()
+                    .base64String(fileName)
+                    .responseStatus("success")
+                    .responseCode("200")
+                    .build();
+        } catch (JRException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public static List<NewCombinedTransactionInfo> getCombinedStatementInfo(CombinedStatementRequestDTO combinedStatementRequestDTO){
 
         String transactionType = "";

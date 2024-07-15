@@ -12,26 +12,25 @@ import org.springframework.web.bind.annotation.*;
 
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("/JasperReports/api/v1")
+@RequestMapping("/JasperReports/api/")
 public class CombinedStatementController {
     private final CombinedStatementReceiptService combinedStatementReceiptService;
 
-    @PostMapping("/downloadCombinedStatement")
-    public ResponseEntity<DefaultResponse> downloadCombinedStatementReceipt(
-            @RequestHeader("authenticationID") String authenticationID,
-            @RequestHeader("applicationID") String applicationID,
-            @RequestHeader("APIKey") String clientAPIKey,
+    @PostMapping("v1/downloadCombinedStatement")
+    public ResponseEntity<DefaultResponse> downloadCombinedStatementReceiptV1(
             @RequestHeader("legalEntityId") String legalEntityId,
-            @RequestHeader("hash") String hash,
             @RequestBody CombinedStatementRequestDTO combinedStatementRequestDTO) {
 
-            RequestHeaders headers = new RequestHeaders();
-            headers.setAuthenticationID(authenticationID);
-            headers.setApplicationID(applicationID);
-            headers.setAPIKey(clientAPIKey);
-            headers.setLegalEntityId(legalEntityId);
-            headers.setHash(hash);
-            combinedStatementRequestDTO.setLegalEntityId(legalEntityId);
-            return Responder.success(combinedStatementReceiptService.downloadCombinedStatementReceipt(combinedStatementRequestDTO));
+        combinedStatementRequestDTO.setLegalEntityId(legalEntityId);
+        return Responder.success(combinedStatementReceiptService.downloadCombinedStatementReceipt(combinedStatementRequestDTO));
+    }
+
+    @PostMapping("/v2/downloadCombinedStatement")
+    public ResponseEntity<DefaultResponse> downloadCombinedStatementReceiptV2(
+            @RequestHeader("legalEntityId") String legalEntityId,
+            @RequestBody CombinedStatementRequestDTO combinedStatementRequestDTO) {
+
+        combinedStatementRequestDTO.setLegalEntityId(legalEntityId);
+        return Responder.success(combinedStatementReceiptService.downloadCombinedStatementReceiptMobile(combinedStatementRequestDTO));
     }
 }
