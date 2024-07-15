@@ -3,10 +3,12 @@ package com.itssc.jasperreport.service.impl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itssc.jasperreport.dto.request.SingleStatementRequestDTO;
+import com.itssc.jasperreport.dto.response.MobileServiceResponse;
 import com.itssc.jasperreport.dto.response.ServiceResponse;
 import com.itssc.jasperreport.models.KVTableInfo;
 import com.itssc.jasperreport.models.TransactionInfo;
 import com.itssc.jasperreport.service.api.SingleStatementService;
+import com.itssc.jasperreport.utils.FileUtil;
 import com.itssc.jasperreport.utils.LocalDateFormatUtil;
 import com.itssc.jasperreport.utils.ResourceUtil;
 import com.itssc.jasperreport.utils.Translation;
@@ -72,6 +74,61 @@ public class SingleStatementServiceImpl implements SingleStatementService {
                     .responseStatus("success")
                     .responseCode("200")
                     .fileFormat("PDF")
+                    .build();
+        } catch (JRException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+    @Override
+    public MobileServiceResponse downloadSingleStatementMobile(SingleStatementRequestDTO singleStatementRequestDTO) {
+        Map<String, Object> parameters = new HashMap<>();
+        Locale locale;
+        if (singleStatementRequestDTO.getLegalEntityId().equalsIgnoreCase("SL6940001") || singleStatementRequestDTO.getLegalEntityId().equalsIgnoreCase("GM2700001")) {
+            locale = Locale.ENGLISH;
+        } else {
+            locale = Locale.FRENCH;
+        }
+        parameters.put("imgLogo", ResourceUtil.getImagePath(singleStatementRequestDTO.getLegalEntityId()));
+        parameters.put("imgBackground", ResourceUtil.getBackgroundImgPath(singleStatementRequestDTO.getLegalEntityId()));
+        parameters.put("fullDate", LocalDateFormatUtil.formatFullDate(singleStatementRequestDTO.getLegalEntityId(), LocalDate.now().toString()));
+        parameters.put("shortDate", LocalDateFormatUtil.formatShortDate(singleStatementRequestDTO.getLegalEntityId(), LocalDate.now().toString()));
+
+        Map<String, Object> transactionParameters = getTransactionParameters(singleStatementRequestDTO);
+        List<TransactionInfo> transactionInfoList = (List<TransactionInfo>)transactionParameters.get("transactionList");
+
+        String closingBalance = (String)transactionParameters.get("closingBalance");
+        String sumCredit = transactionParameters.get("sumCredit").toString();
+        String sumDebit = transactionParameters.get("sumDebit").toString();
+        String countDebit = String.valueOf(transactionParameters.get("countDebit"));
+        String countCredit = String.valueOf(transactionParameters.get("countCredit"));
+        transactionParameters.put("startDate", StringUtils.isBlank(singleStatementRequestDTO.getStartDate()) ? "" : singleStatementRequestDTO.getStartDate());
+        transactionParameters.put("endDate", StringUtils.isBlank(singleStatementRequestDTO.getEndDate()) ? "" : singleStatementRequestDTO.getEndDate());
+
+        JRBeanCollectionDataSource personalInfo = new JRBeanCollectionDataSource(generateTableInfoForPersonalInformation(singleStatementRequestDTO));
+        JRBeanCollectionDataSource accountSummary = new JRBeanCollectionDataSource(generateTableInfoForaccountSummary(transactionParameters,singleStatementRequestDTO));
+        JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(transactionInfoList);
+
+        parameters.put("personalInfo", personalInfo);
+        parameters.put("accountSummary", accountSummary);
+        parameters.put("dataSource", dataSource);
+
+
+        InputStream stream = SingleStatementServiceImpl.class.getClassLoader().getResourceAsStream(ResourceUtil.getSingleStatmentTemplate(singleStatementRequestDTO.getLegalEntityId()));
+
+        JasperReport jasperReport = null;
+        try {
+            jasperReport = JasperCompileManager.compileReport(stream);
+            JasperPrint jasperPrint = new JasperPrint();
+            jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, (JRDataSource) new JREmptyDataSource());
+            byte[] pdfBytes = JasperExportManager.exportReportToPdf(jasperPrint);
+            String base64String = Base64.getEncoder().encodeToString(pdfBytes);
+            String fileName = FileUtil.saveFile(pdfBytes);
+            return MobileServiceResponse.builder()
+                    .base64String(fileName)
+                    .responseStatus("success")
+                    .responseCode("200")
                     .build();
         } catch (JRException e) {
             e.printStackTrace();
