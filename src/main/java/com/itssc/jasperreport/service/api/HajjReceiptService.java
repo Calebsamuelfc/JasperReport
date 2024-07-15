@@ -1,8 +1,11 @@
 package com.itssc.jasperreport.service.api;
 
 import com.itssc.jasperreport.dto.request.HajjReceiptRequestDTO;
-import com.itssc.jasperreport.dto.response.RibResponse;
+import com.itssc.jasperreport.dto.response.MobileServiceResponse;
+import com.itssc.jasperreport.dto.response.ServiceResponse;
 
 public interface HajjReceiptService {
-    RibResponse downloadHajjReceipt(HajjReceiptRequestDTO HajjReceiptRequestDTO);
+    ServiceResponse downloadHajjReceipt(HajjReceiptRequestDTO HajjReceiptRequestDTO);
+
+    MobileServiceResponse downloadHajjReceiptMobile (HajjReceiptRequestDTO HajjReceiptRequestDTO);
 }

@@ -55,6 +55,18 @@ public enum Translation {
     PILGRIMNAME("Pilgrim's Name","Nom du pèlerin"),
     HAJJRECEIPTTITLE("Hajj Transaction Receipt","Hadj Rede Transaction"),
     OUSTANDINGBALANCE("Outstanding Balance","Solde Impayé"),
+    FROMDATE("fromdate","date de début"),
+    GENERATEDBY("generatedby","généré par"),
+    GENERATEDON("generatedon","date de génération"),
+    BANKNAME("bankname","nom de la banque"),
+    TODATE("todate","date d'arrivée"),
+    USERID("userid","identifiant utilisateur"),
+    ADDRESS("address","adresse"),
+    TELEPHONE("telephone","téléphone"),
+    EMAIL("email","email"),
+    TITLE("title","titre"),
+    BRANCH("branch","branche");
+    OUSTANDINGBALANCE("Outstanding Balance","Solde Impayé"),
     CONTRACTREPORTS("CONTRACT REPORTS","RAPPORTS DE CONTRAT");
 
 

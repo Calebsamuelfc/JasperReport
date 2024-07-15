@@ -28,6 +28,14 @@ public class ResourceUtil {
         }
     }
 
+    public static String getCombinedStatementReceiptTemplate(String legalEntityId){
+        if (legalEntityId.equalsIgnoreCase("GM2700001") || legalEntityId.equalsIgnoreCase("SL6940001")) {
+            return "templates/combinedstatementEnglish.jrxml";
+        } else {
+            return "templates/combinedstatementEnglish.jrxml";
+        }
+    }
+
     public static String getHeaderImagePath(String legalEntityId){
         if (legalEntityId.equalsIgnoreCase("GN2240001")) {
             return "templates/Vista GUI Header.png";

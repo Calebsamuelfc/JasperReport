@@ -2,9 +2,11 @@ package com.itssc.jasperreport.service.impl;
 
 import com.itssc.jasperreport.dto.request.HajjReceiptRequestDTO;
 import com.itssc.jasperreport.dto.request.TransactionReceiptRequestDTO;
-import com.itssc.jasperreport.dto.response.RibResponse;
+import com.itssc.jasperreport.dto.response.MobileServiceResponse;
+import com.itssc.jasperreport.dto.response.ServiceResponse;
 import com.itssc.jasperreport.models.KVTableInfo;
 import com.itssc.jasperreport.service.api.HajjReceiptService;
+import com.itssc.jasperreport.utils.FileUtil;
 import com.itssc.jasperreport.utils.LocalDateFormatUtil;
 import com.itssc.jasperreport.utils.ResourceUtil;
 import com.itssc.jasperreport.utils.Translation;
@@ -23,7 +25,7 @@ import java.util.*;
 public class HajjReceiptServiceImpl implements HajjReceiptService {
 
     @Override
-    public RibResponse downloadHajjReceipt(HajjReceiptRequestDTO HajjReceiptRequestDTO) {
+    public ServiceResponse downloadHajjReceipt(HajjReceiptRequestDTO HajjReceiptRequestDTO) {
         Map<String, Object> parameters = new HashMap<>();
         Locale locale;
         if(HajjReceiptRequestDTO.getLegalEntityId().equalsIgnoreCase("SL6940001") || HajjReceiptRequestDTO.getLegalEntityId().equalsIgnoreCase("GM2700001")){
@@ -48,7 +50,7 @@ public class HajjReceiptServiceImpl implements HajjReceiptService {
             jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, (JRDataSource)new JREmptyDataSource());
             byte[] pdfBytes = JasperExportManager.exportReportToPdf(jasperPrint);
             String base64String = Base64.getEncoder().encodeToString(pdfBytes);
-            return RibResponse.builder()
+            return ServiceResponse.builder()
                     .base64String(base64String)
                     .responseStatus("success")
                     .responseCode("200")
@@ -58,6 +60,44 @@ public class HajjReceiptServiceImpl implements HajjReceiptService {
         }
         return null;
     }
+
+    @Override
+    public MobileServiceResponse downloadHajjReceiptMobile(HajjReceiptRequestDTO HajjReceiptRequestDTO) {
+        Map<String, Object> parameters = new HashMap<>();
+        Locale locale;
+        if(HajjReceiptRequestDTO.getLegalEntityId().equalsIgnoreCase("SL6940001") || HajjReceiptRequestDTO.getLegalEntityId().equalsIgnoreCase("GM2700001")){
+            locale = Locale.ENGLISH;
+        }else{
+            locale = Locale.FRENCH;
+        }
+        parameters.put("imgHeader", ResourceUtil.getHeaderImagePath(HajjReceiptRequestDTO.getLegalEntityId()));
+        parameters.put("imgBackground", ResourceUtil.getBackgroundImgPath(HajjReceiptRequestDTO.getLegalEntityId()));
+        parameters.put("title", Translation.HAJJRECEIPTTITLE.getTranslation(locale));
+        parameters.put("date", LocalDateFormatUtil.formatFullDate(HajjReceiptRequestDTO.getLegalEntityId(), LocalDate.now().toString()));
+
+        JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(getHajjReceiptInfo(HajjReceiptRequestDTO));
+        parameters.put("datasource", dataSource);
+
+        InputStream stream = HajjReceiptServiceImpl.class.getClassLoader().getResourceAsStream(ResourceUtil.getTransactionReceiptTemplate(HajjReceiptRequestDTO.getLegalEntityId()));
+
+        JasperReport jasperReport = null;
+        try {
+            jasperReport = JasperCompileManager.compileReport(stream);
+            JasperPrint jasperPrint = new JasperPrint();
+            jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, (JRDataSource)new JREmptyDataSource());
+            byte[] pdfBytes = JasperExportManager.exportReportToPdf(jasperPrint);
+            String fileName = FileUtil.saveFile(pdfBytes);
+            return MobileServiceResponse.builder()
+                    .base64String(fileName)
+                    .responseStatus("success")
+                    .responseCode("200")
+                    .build();
+        } catch (JRException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public static List<KVTableInfo> getHajjReceiptInfo(HajjReceiptRequestDTO HajjReceiptRequestDTO){
         Locale locale;
         if(HajjReceiptRequestDTO.getLegalEntityId().equalsIgnoreCase("SL6940001") || HajjReceiptRequestDTO.getLegalEntityId().equalsIgnoreCase("GM2700001")){
