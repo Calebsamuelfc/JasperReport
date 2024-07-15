@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 public class TransactionReceiptController {
 
     private final TransactionReceiptService singleTransactionReceiptService;
+
     @PostMapping("/v1/downloadSingleTransaction")
     public ResponseEntity<DefaultResponse> downloadSingleTransactionReceipt(
             @RequestHeader("legalEntityId") String legalEntityId,
@@ -23,6 +24,7 @@ public class TransactionReceiptController {
         transactionReceiptRequestDTO.setLegalEntityId(legalEntityId);
         return Responder.success(singleTransactionReceiptService.downloadSingleTransactionReceipt(transactionReceiptRequestDTO));
     }
+
     @PostMapping("/v2/downloadSingleTransaction")
     public ResponseEntity<DefaultResponse> downloadSingleTransactionReceiptV2(
             @RequestHeader("legalEntityId") String legalEntityId,
