@@ -74,7 +74,15 @@ public enum Translation {
     SID_CUS_SUSPENDED("SID_CUS_Suspended", "Suspendu"),
     SID_CUS_INACTIVE("SID_CUS_Inactive", "Inactif"),
     INACTIVE("Inactive", "Inactif"),
-    SUSPENDED("Suspended", "Suspendu");
+    SUSPENDED("Suspended", "Suspendu"),
+    CLOSINGBALANCE("Closing Balance", "Solde de clôture"),
+    STARTDATE("Start Date", "Date de début"),
+    ENDDATE("End Date", "Date de fin"),
+    FILEFORMAT("File Format", "Format de fichier"),
+    ACCOUNTNAME("Account Name:","Nom du compte:"),
+    SUMDEBIT("Sum of Debits:","Somme des débits:"),
+    SUMCREDIT("Sum of Credits:","Somme des crédit:"),
+    OPENINGBALANCE("Opening Balance:","Solde initial:");
 
 
 
