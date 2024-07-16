@@ -24,5 +24,20 @@ public class BulkUserController {
             combinedStatementRequestDTO.setLegalEntityId(legalEntityId);
             return Responder.success(bulkUserService.downloadBulkUser(combinedStatementRequestDTO));
         }
+    @PostMapping("/getBulkUserCreationReportCsv")
+    public ResponseEntity<DefaultResponse> getBulkUserCreationReportCsv(
+            @RequestHeader("legalEntityId") String legalEntityId,
+            @RequestBody CombinedStatementRequestDTO combinedStatementRequestDTO) {
+        combinedStatementRequestDTO.setLegalEntityId(legalEntityId);
+        return Responder.success(bulkUserService.downloadBulkUserCsv(combinedStatementRequestDTO));
+    }
+
+    @PostMapping("/getBulkUserCreationReportExcel")
+    public ResponseEntity<DefaultResponse> getBulkUserCreationReportExcel(
+            @RequestHeader("legalEntityId") String legalEntityId,
+            @RequestBody CombinedStatementRequestDTO combinedStatementRequestDTO) {
+        combinedStatementRequestDTO.setLegalEntityId(legalEntityId);
+        return Responder.success(bulkUserService.downloadBulkUserExcel(combinedStatementRequestDTO));
+    }
 
 }

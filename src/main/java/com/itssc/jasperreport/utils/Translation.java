@@ -79,6 +79,7 @@ public enum Translation {
     LASTNAMEHEADER("LastName:", "Nom"),
     SUCCESS("SUCCESS", "SUCCES"),
     FAILURE("FAILURE", "ECHEC"),
+    INFINITYUSERID("InfinityUserId", "ID utilisateur Infinity"),
     BULKUSERTITLE("BULK CREATE USER REPORT","CRÉATION EN VRAC D'UN RAPPORT UTILISATEUR");
 
 

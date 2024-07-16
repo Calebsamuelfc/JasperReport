@@ -12,14 +12,21 @@ import com.itssc.jasperreport.utils.LocalDateFormatUtil;
 import com.itssc.jasperreport.utils.Masker;
 import com.itssc.jasperreport.utils.ResourceUtil;
 import com.itssc.jasperreport.utils.Translation;
+import com.opencsv.CSVWriter;
 import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.tomcat.util.json.JSONParser;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.text.ParseException;
 import java.time.LocalDate;
 import java.util.*;
@@ -87,6 +94,121 @@ public class BulkUserServiceImpl implements BulkUserService {
         }
         return null;
     }
+
+    @Override
+    public ServiceResponse downloadBulkUserCsv(CombinedStatementRequestDTO combinedStatementRequestDTO) {
+        byte[] base64Data;
+        byte[] decodedBytes = Base64.getDecoder().decode(combinedStatementRequestDTO.getBase64String());
+
+        String decodedString = new String(decodedBytes);
+        try{
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode rootNode = objectMapper.readTree(decodedString);
+
+            StringWriter csvWriterString = new StringWriter();
+            // Write headers
+            try (CSVWriter csvWriter = new CSVWriter(csvWriterString)) {
+                // Write headers
+                String[] headers = getHeaders(rootNode.get("bulkUserData").get(0));
+                String[] newHeaders = convertHeaders(headers, combinedStatementRequestDTO.getLegalEntityId());
+                csvWriter.writeNext(newHeaders);
+                // Write data
+                for (JsonNode node : rootNode.get("bulkUserData")) {
+                    String[] data = getData(node, headers);
+                    csvWriter.writeNext(translateStatus(data,combinedStatementRequestDTO.getLegalEntityId()));
+                }
+            }
+
+            // Get the CSV data as a string
+            String csvData = csvWriterString.toString();
+
+            byte[] csvBytes = csvData.getBytes();
+
+            base64Data = Base64.getEncoder().encode(csvBytes);
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+                return ServiceResponse.builder()
+                        .base64String("")
+                        .responseStatus("failure")
+                        .responseCode("500")
+                        .fileFormat("CSV")
+                        .build();
+            }
+
+            String base64String = new String(base64Data);
+            System.out.println(base64String);
+            return ServiceResponse.builder()
+                    .base64String(base64String)
+                    .responseStatus("success")
+                    .responseCode("200")
+                    .fileFormat("CSV")
+                    .build();
+
+
+        }
+
+    @Override
+    public ServiceResponse downloadBulkUserExcel(CombinedStatementRequestDTO combinedStatementRequestDTO) {
+
+            byte[] decodedBytes = Base64.getDecoder().decode(combinedStatementRequestDTO.getBase64String());
+            String decodedString = new String(decodedBytes);
+            String base64String = "";
+            try {
+                XSSFWorkbook xSSFWorkbook = new XSSFWorkbook();
+                Sheet sheet = xSSFWorkbook.createSheet("Data");
+                ObjectMapper objectMapper = new ObjectMapper();
+                JsonNode rootNode = objectMapper.readTree(decodedString);
+
+                // Create header row
+                Row headerRow = sheet.createRow(0);
+                int columnIndex = 0;
+                String[] headers = getHeaders(rootNode.get("bulkUserData").get(0));
+                String[] newHeaders = convertHeaders(headers, combinedStatementRequestDTO.getLegalEntityId());
+                for (String key : newHeaders) {
+                    Cell cell = headerRow.createCell(columnIndex++);
+                    cell.setCellValue(key);
+                }
+
+                // Create data rows
+                int i = 1;
+                for (JsonNode node : rootNode.get("bulkUserData")) {
+                    columnIndex = 0;
+                    String[] data = getData(node, headers);
+                    Row dataRow = sheet.createRow(i++);
+                    for (String key : data) {
+                        Cell cell = dataRow.createCell(columnIndex++);
+                        cell.setCellValue(translateStatus(key, combinedStatementRequestDTO.getLegalEntityId()));
+                    }
+                }
+
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                xSSFWorkbook.write(outputStream);
+                byte[] excelData = outputStream.toByteArray();
+                base64String = Base64.getEncoder().encodeToString(excelData);
+
+                xSSFWorkbook.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+                return ServiceResponse.builder()
+                        .base64String("")
+                        .responseStatus("failure")
+                        .responseCode("500")
+                        .fileFormat("XLSX")
+                        .build();
+            }
+
+            System.out.println(base64String);
+            return ServiceResponse.builder()
+                    .base64String(base64String)
+                    .responseStatus("success")
+                    .responseCode("200")
+                    .fileFormat("XLSX")
+                    .build();
+    }
+
+
     public static List<BulkUserInfo> getBulkUserInfo(CombinedStatementRequestDTO combinedStatementRequestDTO) {
         List<BulkUserInfo> bulkUserInfoList = new ArrayList<>();
 
@@ -153,6 +275,69 @@ public class BulkUserServiceImpl implements BulkUserService {
             case "FAILURE" -> Translation.FAILURE.getTranslation(locale).toUpperCase();
         }
         return status;
+    }
+
+    private static String[] getData(JsonNode node, String[] headers) {
+        Iterator<String> fieldNames = node.fieldNames();
+        String[] data = new String[node.size()];
+        int idx = 0;
+        while (fieldNames.hasNext()) {
+            String text = node.get(fieldNames.next()).asText();
+            data[idx++] = text;
+        }
+        for(int i = 0; i < headers.length; i++){
+            String head = headers[i];
+            if(head.equals("Email")){
+                data[i] = Masker.maskEmail(data[i]);
+            }
+            if(head.equals("PhoneNumber")){
+                data[i] = Masker.maskPhoneNumber(data[i]);
+            }
+        }
+        return data;
+    }
+
+    private static String[] translateStatus(String[] dataArray, String legalEntityId){
+        String[] status = new String[dataArray.length];
+        for(int i = 0; i < dataArray.length; i++){
+            status[i] = translateStatus(dataArray[i], legalEntityId);
+        }
+        return status;
+    }
+    private static String[] getHeaders(JsonNode node) {
+        Iterator<String> fieldNames = node.fieldNames();
+        String[] headers = new String[node.size()];
+        int idx = 0;
+        while (fieldNames.hasNext()) {
+            headers[idx++] = fieldNames.next();
+        }
+        return headers;
+    }
+
+    private static String[] convertHeaders(String[] headers, String legalEntityId) {
+        Locale locale;
+        if (legalEntityId.equalsIgnoreCase("SL6940001") || legalEntityId.equalsIgnoreCase("GM2700001")) {
+            locale = Locale.ENGLISH;
+        } else {
+            locale = Locale.FRENCH;
+        }
+        String[] header = new String[headers.length];
+
+        for (int i = 0; i < headers.length; i++) {
+            String head = headers[i];
+            header[i] = switch (head) {
+                case "Email" -> Translation.EMAIL.getTranslation(locale).toUpperCase();
+                case "LastName" -> Translation.LASTNAMEHEADER.getTranslation(locale).toUpperCase();
+                case "CustomerId" -> Translation.CUSTOMERID.getTranslation(locale).toUpperCase();
+                case "FirstName" -> Translation.FIRSTNAMEHEADER.getTranslation(locale).toUpperCase();
+                case "ContractId" -> Translation.CONTRACTID.getTranslation(locale).toUpperCase();
+                case "PhoneNumber" -> Translation.TELEPHONE.getTranslation(locale).toUpperCase();
+                case "InfinityUserId" -> Translation.INFINITYUSERID.getTranslation(locale).toUpperCase();
+                case "Status" -> Translation.STATUS.getTranslation(locale).toUpperCase();
+                default -> head.toUpperCase();
+            };
+        }
+        return headers;
     }
 
 }
