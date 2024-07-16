@@ -66,7 +66,15 @@ public enum Translation {
     EMAIL("email","email"),
     TITLE("title","titre"),
     BRANCH("branch","branche"),
-    CONTRACTREPORTS("CONTRACT REPORTS","RAPPORTS DE CONTRAT");
+    CONTRACTREPORTS("CONTRACT REPORTS","RAPPORTS DE CONTRAT"),
+    CONTRACTTYPE("ContractType","TYPE DE SERVICE"),
+    COMPANYLEGALUNIT("CompanyLegalUnit","ENTITE LEGALE"),
+    ACTIVE("Active", "Actif"),
+    NEW("New", "Nouveau"),
+    SID_CUS_SUSPENDED("SID_CUS_Suspended", "Suspendu"),
+    SID_CUS_INACTIVE("SID_CUS_Inactive", "Inactif"),
+    INACTIVE("Inactive", "Inactif"),
+    SUSPENDED("Suspended", "Suspendu");
 
 
 
