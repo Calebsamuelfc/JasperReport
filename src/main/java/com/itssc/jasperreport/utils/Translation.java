@@ -71,8 +71,6 @@ public enum Translation {
     COMPANYLEGALUNIT("CompanyLegalUnit","ENTITE LEGALE"),
     ACTIVE("Active", "Actif"),
     NEW("New", "Nouveau"),
-    SID_CUS_SUSPENDED("SID_CUS_Suspended", "Suspendu"),
-    SID_CUS_INACTIVE("SID_CUS_Inactive", "Inactif"),
     INACTIVE("Inactive", "Inactif"),
     SUSPENDED("Suspended", "Suspendu"),
     CLOSINGBALANCE("Closing Balance", "Solde de clôture"),
