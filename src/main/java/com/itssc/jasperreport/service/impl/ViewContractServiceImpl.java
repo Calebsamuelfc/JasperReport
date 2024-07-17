@@ -15,6 +15,11 @@ import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
+import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
@@ -119,8 +124,59 @@ public class ViewContractServiceImpl implements ViewContractService {
     }
 
     @Override
-    public ServiceResponse viewContractExcel(ContractRequestDTO ContractRequestDTO) {
-        return null;
+    public ServiceResponse viewContractExcel(ContractRequestDTO contractRequestDTO) {
+        byte[] decodedBytes = Base64.getDecoder().decode(contractRequestDTO.getBase64String());
+        String decodedString = new String(decodedBytes);
+        String base64String = "";
+        try {
+            XSSFWorkbook xSSFWorkbook = new XSSFWorkbook();
+            Sheet sheet = xSSFWorkbook.createSheet("Data");
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode rootNode = objectMapper.readTree(decodedString);
+
+            // Create header row
+            Row headerRow = sheet.createRow(0);
+            int columnIndex = 0;
+            String[] headers = getHeaders(rootNode.get("records").get(0));
+            String[] newHeaders = convertHeaders(headers, contractRequestDTO.getLegalEntityId());
+            for (String key : newHeaders) {
+                Cell cell = headerRow.createCell(columnIndex++);
+                cell.setCellValue(key);
+            }
+
+            // Create data rows
+            int i = 1;
+            for (JsonNode node : rootNode.get("records")) {
+                columnIndex = 0;
+                String[] data = getData(node, headers);
+                Row dataRow = sheet.createRow(i++);
+                for (String key : data) {
+                    Cell cell = dataRow.createCell(columnIndex++);
+                    cell.setCellValue(key);
+                }
+            }
+
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            xSSFWorkbook.write(outputStream);
+            byte[] excelData = outputStream.toByteArray();
+            base64String = Base64.getEncoder().encodeToString(excelData);
+
+            xSSFWorkbook.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ServiceResponse.builder()
+                    .base64String("")
+                    .responseStatus("failure")
+                    .responseCode("500")
+                    .fileFormat("XLSX")
+                    .build();
+        }
+        return ServiceResponse.builder()
+                .base64String(base64String)
+                .responseStatus("success")
+                .responseCode("200")
+                .fileFormat("XLSX")
+                .build();
     }
 
     public static List<ViewContractInfo> getContractListView(ContractRequestDTO ContractRequestDTO) {
