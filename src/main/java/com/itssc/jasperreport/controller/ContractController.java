@@ -46,4 +46,13 @@ public class ContractController {
         ContractRequestDTO.setLegalEntityId(legalEntityId);
         return Responder.success(downloadContractService.downloadContractExcel(ContractRequestDTO));
     }
+
+    @PostMapping("/downloadAccountContract")
+    public ResponseEntity<DefaultResponse> downloadAccountContract(
+            @RequestHeader("legalEntityId") String legalEntityId,
+            @RequestBody ContractRequestDTO ContractRequestDTO) {
+
+        ContractRequestDTO.setLegalEntityId(legalEntityId);
+        return Responder.success(downloadContractService.downloadAccountContract(ContractRequestDTO));
+    }
 }
