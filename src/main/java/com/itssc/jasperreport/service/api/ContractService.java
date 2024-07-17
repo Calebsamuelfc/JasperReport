@@ -7,4 +7,5 @@ public interface ContractService {
     ServiceResponse DownloadContract(ContractRequestDTO ContractRequestDTO);
     ServiceResponse downloadContractCsv(ContractRequestDTO ContractRequestDTO);
     ServiceResponse downloadContractExcel(ContractRequestDTO ContractRequestDTO);
+    ServiceResponse downloadAccountContract(ContractRequestDTO ContractRequestDTO);
 }
