@@ -15,11 +15,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("/JasperReports/api/v1")
+@RequestMapping("/JasperReports/api")
 public class SingleStatementController {
     private final SingleStatementService singleStatementService;
 
-    @PostMapping("/downloadSingleStatement")
+    @PostMapping("/v1/downloadSingleStatement")
     public ResponseEntity<DefaultResponse> downloadSingleStatement(
             @RequestHeader("authenticationID") String authenticationID,
             @RequestHeader("applicationID") String applicationID,
@@ -37,5 +37,25 @@ public class SingleStatementController {
 
         singleStatementRequestDTO.setLegalEntityId(legalEntityId);
         return Responder.success(singleStatementService.downloadSingleStatement(singleStatementRequestDTO));
+    }
+
+    @PostMapping("/v2/downloadSingleStatement")
+    public ResponseEntity<DefaultResponse> downloadSingleStatementMobile(
+            @RequestHeader("authenticationID") String authenticationID,
+            @RequestHeader("applicationID") String applicationID,
+            @RequestHeader("APIKey") String clientAPIKey,
+            @RequestHeader("legalEntityId") String legalEntityId,
+            @RequestHeader("hash") String hash,
+            @RequestBody SingleStatementRequestDTO singleStatementRequestDTO) {
+
+        RequestHeaders headers = new RequestHeaders();
+        headers.setAuthenticationID(authenticationID);
+        headers.setApplicationID(applicationID);
+        headers.setAPIKey(clientAPIKey);
+        headers.setLegalEntityId(legalEntityId);
+        headers.setHash(hash);
+
+        singleStatementRequestDTO.setLegalEntityId(legalEntityId);
+        return Responder.success(singleStatementService.downloadSingleStatementMobile(singleStatementRequestDTO));
     }
 }

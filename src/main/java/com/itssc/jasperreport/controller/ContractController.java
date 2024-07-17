@@ -22,21 +22,28 @@ public class ContractController {
     @PostMapping("/downloadContract")
     public ResponseEntity<DefaultResponse> downloadContract(
             @RequestHeader("legalEntityId") String legalEntityId,
-            @RequestHeader("authenticationID") String authenticationID,
-            @RequestHeader("applicationID") String applicationID,
-            @RequestHeader("APIKey") String ClientAPIKey,
-            @RequestHeader("hash") String hash,
             @RequestBody ContractRequestDTO ContractRequestDTO) {
 
-        RequestHeaders headers = new RequestHeaders();
-        headers.setAuthenticationID(authenticationID);
-        headers.setApplicationID(applicationID);
-        headers.setAPIKey(ClientAPIKey);
-        headers.setLegalEntityId(legalEntityId);
-        headers.setHash(hash);
 
         ContractRequestDTO.setLegalEntityId(legalEntityId);
         return Responder.success(downloadContractService.DownloadContract(ContractRequestDTO));
 }
 
+    @PostMapping("/downloadContractCsv")
+    public ResponseEntity<DefaultResponse> downloadContractCsv(
+            @RequestHeader("legalEntityId") String legalEntityId,
+            @RequestBody ContractRequestDTO ContractRequestDTO) {
+
+        ContractRequestDTO.setLegalEntityId(legalEntityId);
+        return Responder.success(downloadContractService.downloadContractCsv(ContractRequestDTO));
+    }
+
+    @PostMapping("/downloadContractExcel")
+    public ResponseEntity<DefaultResponse> downloadContractExcel(
+            @RequestHeader("legalEntityId") String legalEntityId,
+            @RequestBody ContractRequestDTO ContractRequestDTO) {
+
+        ContractRequestDTO.setLegalEntityId(legalEntityId);
+        return Responder.success(downloadContractService.downloadContractExcel(ContractRequestDTO));
+    }
 }
