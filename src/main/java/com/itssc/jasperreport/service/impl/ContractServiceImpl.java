@@ -10,13 +10,21 @@ import com.itssc.jasperreport.utils.LocalDateFormatUtil;
 import com.itssc.jasperreport.utils.Masker;
 import com.itssc.jasperreport.utils.ResourceUtil;
 import com.itssc.jasperreport.utils.Translation;
+import com.opencsv.CSVWriter;
 import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
+import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 
+
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -65,6 +73,109 @@ public class ContractServiceImpl implements ContractService {
 
               return null;
     }
+
+    @Override
+    public ServiceResponse downloadContractCsv(ContractRequestDTO contractRequestDTO) {
+        byte[] decodedBytes = Base64.getDecoder().decode(contractRequestDTO.getBase64String());
+        String decodedString = new String(decodedBytes);
+        byte[] base64Data;
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode rootNode = objectMapper.readTree(decodedString);
+            StringWriter csvWriterString = new StringWriter();
+            try (CSVWriter csvWriter = new CSVWriter(csvWriterString)) {
+                String[] headers = getHeaders(rootNode.get("vista_contract_list_view").get(0));
+                String[] newHeaders = convertHeaders(headers, contractRequestDTO.getLegalEntityId());
+                csvWriter.writeNext(newHeaders);
+                for (JsonNode node : rootNode.get("vista_contract_list_view")) {
+                    String[] data = getData(node, headers);
+                    csvWriter.writeNext(data);
+                }
+            }
+            String csvData = csvWriterString.toString();
+            byte[] csvBytes = csvData.getBytes();
+            base64Data = Base64.getEncoder().encode(csvBytes);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ServiceResponse.builder()
+                    .base64String("")
+                    .responseStatus("failure")
+                    .responseCode("500")
+                    .fileFormat("CSV")
+                    .build();
+        }
+
+        String base64String = new String(base64Data);
+        System.out.println(base64String);
+        return ServiceResponse.builder()
+                .base64String(base64String)
+                .responseStatus("success")
+                .responseCode("200")
+                .fileFormat("CSV")
+                .build();
+
+
+    }
+
+    @Override
+    public ServiceResponse downloadContractExcel(ContractRequestDTO contractRequestDTO) {
+
+        byte[] decodedBytes = Base64.getDecoder().decode(contractRequestDTO.getBase64String());
+        String decodedString = new String(decodedBytes);
+        String base64String = "";
+        try {
+            XSSFWorkbook xSSFWorkbook = new XSSFWorkbook();
+            Sheet sheet = xSSFWorkbook.createSheet("Data");
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode rootNode = objectMapper.readTree(decodedString);
+
+            // Create header row
+            Row headerRow = sheet.createRow(0);
+            int columnIndex = 0;
+            String[] headers = getHeaders(rootNode.get("vista_contract_list_view").get(0));
+            String[] newHeaders = convertHeaders(headers, contractRequestDTO.getLegalEntityId());
+            for (String key : newHeaders) {
+                Cell cell = headerRow.createCell(columnIndex++);
+                cell.setCellValue(key);
+            }
+
+            // Create data rows
+            int i = 1;
+            for (JsonNode node : rootNode.get("vista_contract_list_view")) {
+                columnIndex = 0;
+                String[] data = getData(node, headers);
+                Row dataRow = sheet.createRow(i++);
+                for (String key : data) {
+                    Cell cell = dataRow.createCell(columnIndex++);
+                    cell.setCellValue(translateStatus(key, contractRequestDTO.getLegalEntityId()));
+                }
+            }
+
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            xSSFWorkbook.write(outputStream);
+            byte[] excelData = outputStream.toByteArray();
+            base64String = Base64.getEncoder().encodeToString(excelData);
+
+            xSSFWorkbook.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ServiceResponse.builder()
+                    .base64String("")
+                    .responseStatus("failure")
+                    .responseCode("500")
+                    .fileFormat("XLSX")
+                    .build();
+        }
+
+        System.out.println(base64String);
+        return ServiceResponse.builder()
+                .base64String(base64String)
+                .responseStatus("success")
+                .responseCode("200")
+                .fileFormat("XLSX")
+                .build();
+    }
+
 
     public List<ContractInfo> getContractInfo(ContractRequestDTO ContractRequestDTO){
         final ObjectMapper objectMapper = new ObjectMapper();
@@ -125,5 +236,69 @@ public class ContractServiceImpl implements ContractService {
         return contractInfoList;
 }
 
+    private static String[] getHeaders(JsonNode node) {
+        Iterator<String> fieldNames = node.fieldNames();
+        String[] headers = new String[node.size()];
+        int idx = 0;
+        while (fieldNames.hasNext())
+            headers[idx++] = fieldNames.next();
+        return headers;
+    }
+    private static String[] getData(JsonNode node, String[] headers) {
+        Iterator<String> fieldNames = node.fieldNames();
+        String[] data = new String[node.size()];
+        int idx = 0;
+        while (fieldNames.hasNext()) {
+            String text = node.get(fieldNames.next()).asText();
+            data[idx++] = text;
+        }
+        for (int i = 0; i < headers.length; i++) {
+            String head = headers[i];
+            if (head.equals("Email"))
+                data[i] = Masker.maskEmail(data[i]);
+        }
+        return data;
+    }
+    private static String[] convertHeaders(String[] headers, String legalEntityId) {
+        Locale locale;
+        if (legalEntityId.equalsIgnoreCase("SL6940001") || legalEntityId.equalsIgnoreCase("GM2700001")) {
+            locale = Locale.ENGLISH;
+        } else {
+            locale = Locale.FRENCH;
+        }
+        String[] header = new String[headers.length];
+
+        for (int i = 0; i < headers.length; i++) {
+            String head = headers[i];
+            header[i] = switch (head) {
+                case "Email" -> Translation.EMAIL.getTranslation(locale).toUpperCase();
+                case "ContractType" -> Translation.CONTRACTTYPE.getTranslation(locale).toUpperCase();
+                case "CustomerId", "CoreCustomerId" -> Translation.CUSTOMERID.getTranslation(locale).toUpperCase();
+                case "CreateDate" -> Translation.DATE.getTranslation(locale).toUpperCase();
+                case "ContractName" -> Translation.CONTRACTNAME.getTranslation(locale).toUpperCase();
+                case "ContractId" -> Translation.CONTRACTID.getTranslation(locale).toUpperCase();
+                case "CoreCustomerName" -> Translation.CUSTOMERNAME.getTranslation(locale).toUpperCase();
+                case "CompanyLegalUnit" -> Translation.COMPANYLEGALUNIT.getTranslation(locale).toUpperCase();
+                default -> head.toUpperCase();
+            };
+        }
+        return headers;
+    }
+    private static String translateStatus(String status, String legalEntityId) {
+        Locale locale;
+        if (legalEntityId.equals("SL6940001") || legalEntityId.equals("GM2700001")){
+            locale = Locale.ENGLISH;
+        } else {
+            locale = Locale.FRENCH;
+        }
+        String translatedStatus = switch (status.toUpperCase()) {
+            case "ACTIVE" -> Translation.ACTIVE.getTranslation(locale).toUpperCase();
+            case "NEW" -> Translation.NEW.getTranslation(locale).toUpperCase();
+            case "SID_CUS_SUSPENDED", "SUSPENDED" -> Translation.SUSPENDED.getTranslation(locale).toUpperCase();
+            case "SID_CUS_INACTIVE", "INACTIVE" -> Translation.INACTIVE.getTranslation(locale).toUpperCase();
+            default -> status.toUpperCase();
+        };
+        return translatedStatus;
+    }
 
 }
