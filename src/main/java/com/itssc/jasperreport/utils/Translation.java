@@ -80,7 +80,12 @@ public enum Translation {
     ACCOUNTNAME("Account Name:","Nom du compte:"),
     SUMDEBIT("Sum of Debits:","Somme des débits:"),
     SUMCREDIT("Sum of Credits:","Somme des crédit:"),
-    OPENINGBALANCE("Opening Balance:","Solde initial:");
+    OPENINGBALANCE("Opening Balance:","Solde initial:"),
+    FIRSTNAMEHEADER("FirstName:", "Prénom"),
+    LASTNAMEHEADER("LastName:", "Nom"),
+    SUCCESS("SUCCESS", "SUCCES"),
+    FAILURE("FAILURE", "ECHEC"),
+    BULKUSERTITLE("BULK CREATE USER REPORT","CRÉATION EN VRAC D'UN RAPPORT UTILISATEUR");
 
 
 
