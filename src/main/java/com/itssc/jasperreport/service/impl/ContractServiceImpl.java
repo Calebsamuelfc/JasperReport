@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itssc.jasperreport.dto.request.ContractRequestDTO;
 import com.itssc.jasperreport.dto.response.ServiceResponse;
+import com.itssc.jasperreport.models.AccountContractInfo;
 import com.itssc.jasperreport.models.ContractInfo;
 import com.itssc.jasperreport.service.api.ContractService;
 import com.itssc.jasperreport.utils.LocalDateFormatUtil;
@@ -176,6 +177,46 @@ public class ContractServiceImpl implements ContractService {
                 .build();
     }
 
+    @Override
+    public ServiceResponse downloadAccountContract(ContractRequestDTO ContractRequestDTO) {
+        Map<String, Object> parameters = new HashMap<>();
+        Locale locale;
+        if (ContractRequestDTO.getLegalEntityId().equalsIgnoreCase("SL6940001") || ContractRequestDTO.getLegalEntityId().equalsIgnoreCase("GM2700001")) {
+            locale = Locale.ENGLISH;
+        } else {
+            locale = Locale.FRENCH;
+        }
+        parameters.put("imageLogo", ResourceUtil.getImagePath(ContractRequestDTO.getLegalEntityId()));
+        parameters.put("imgBackground", ResourceUtil.getBackgroundImgPath(ContractRequestDTO.getLegalEntityId()));
+        parameters.put("title", Translation.CONTRACTREPORTS.getTranslation(locale));
+        parameters.put("fullDate", LocalDateFormatUtil.formatFullDate(ContractRequestDTO.getLegalEntityId(), LocalDate.now().toString()));
+
+        JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(getAccountContractInfo(ContractRequestDTO));
+        parameters.put("contractData", dataSource);
+
+        InputStream stream = ContractServiceImpl.class.getClassLoader().getResourceAsStream(ResourceUtil.getAccountTemplate(ContractRequestDTO.getLegalEntityId()));
+
+        JasperReport jasperReport = null;
+
+        try{
+            jasperReport = JasperCompileManager.compileReport(stream);
+            JasperPrint jasperPrint = new JasperPrint();
+            jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, (JRDataSource)new JREmptyDataSource());
+            byte[] pdfBytes = JasperExportManager.exportReportToPdf(jasperPrint);
+            String base64String = Base64.getEncoder().encodeToString(pdfBytes);
+            return ServiceResponse.builder()
+                    .base64String(base64String)
+                    .responseStatus("success")
+                    .responseCode("200")
+                    .fileFormat("PDF")
+                    .build();
+        } catch (JRException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+
+    }
 
     public List<ContractInfo> getContractInfo(ContractRequestDTO ContractRequestDTO){
         final ObjectMapper objectMapper = new ObjectMapper();
@@ -236,6 +277,64 @@ public class ContractServiceImpl implements ContractService {
         return contractInfoList;
 }
 
+    public List<AccountContractInfo> getAccountContractInfo(ContractRequestDTO ContractRequestDTO){
+        final ObjectMapper objectMapper = new ObjectMapper();
+
+        String AccountStatus = "N/A";
+        String AccountType = "N/A";
+        String ContractId = "N/A";
+        String CustomerId = "N/A";
+        String AccountName = "N/A";
+        String AccountId = "N/A";
+
+        List<AccountContractInfo> contractInfoList = new ArrayList<>();
+        byte[] decodedBytes = Base64.getDecoder().decode(ContractRequestDTO.getBase64String());
+        String decodedString = new String(decodedBytes);
+
+        try {
+            JsonNode rootNode = objectMapper.readTree(decodedString);
+            JsonNode contractList = rootNode.get("vista_contract_customer_account_view");
+
+            if (contractList != null && contractList.isArray()) {
+                for (JsonNode contract : contractList) {
+                    if (contract.has("AccountType")) {
+                        AccountType = StringUtils.isBlank(contract.get("AccountType").asText()) ? "N/A" : contract.get("AccountType").asText();
+                    }
+                    if (contract.has("CustomerId")) {
+                        CustomerId = StringUtils.isBlank(contract.get("CustomerId").asText()) ? "N/A" : contract.get("CustomerId").asText();
+                    }
+                    if (contract.has("AccountStatus")) {
+                        AccountStatus = StringUtils.isBlank(contract.get("AccountStatus").asText()) ? "N/A" : contract.get("AccountStatus").asText();
+                        AccountStatus = translateStatus(AccountStatus, ContractRequestDTO.getLegalEntityId());
+                    }
+                    if (contract.has("ContractId")) {
+                        ContractId = StringUtils.isBlank(contract.get("ContractId").asText()) ? "N/A" : contract.get("ContractId").asText();
+                    }
+                    if (contract.has("AccountName")) {
+                        AccountName = StringUtils.isBlank(contract.get("AccountName").asText()) ? "N/A" : contract.get("AccountName").asText();
+                    }
+                    if (contract.has("AccountId")) {
+                        AccountId = StringUtils.isBlank(contract.get("AccountId").asText()) ? "N/A" : contract.get("AccountId").asText();
+                    }
+
+                    contractInfoList.add(AccountContractInfo.builder()
+                            .sn(String.valueOf(contractInfoList.size() + 1))
+                            .accountId(AccountId)
+                            .accountName(AccountName)
+                            .contractId(ContractId)
+                            .accountStatus(AccountStatus)
+                            .accountType(AccountType)
+                            .coreCustomerId(CustomerId)
+                            .build());
+                }
+
+            }
+        } catch (Exception e) {
+
+        }
+        return contractInfoList;
+    }
+
     private static String[] getHeaders(JsonNode node) {
         Iterator<String> fieldNames = node.fieldNames();
         String[] headers = new String[node.size()];
@@ -244,6 +343,7 @@ public class ContractServiceImpl implements ContractService {
             headers[idx++] = fieldNames.next();
         return headers;
     }
+
     private static String[] getData(JsonNode node, String[] headers) {
         Iterator<String> fieldNames = node.fieldNames();
         String[] data = new String[node.size()];
@@ -259,6 +359,7 @@ public class ContractServiceImpl implements ContractService {
         }
         return data;
     }
+
     private static String[] convertHeaders(String[] headers, String legalEntityId) {
         Locale locale;
         if (legalEntityId.equalsIgnoreCase("SL6940001") || legalEntityId.equalsIgnoreCase("GM2700001")) {
@@ -284,6 +385,7 @@ public class ContractServiceImpl implements ContractService {
         }
         return headers;
     }
+
     private static String translateStatus(String status, String legalEntityId) {
         Locale locale;
         if (legalEntityId.equals("SL6940001") || legalEntityId.equals("GM2700001")){

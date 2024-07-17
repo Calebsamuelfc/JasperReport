@@ -27,6 +27,13 @@ public class ResourceUtil {
             return "templates/listOfcontract French.jrxml";
         }
     }
+    public static String getAccountTemplate(String legalEntityId){
+        if (legalEntityId.equalsIgnoreCase("GM2700001") || legalEntityId.equalsIgnoreCase("SL6940001")) {
+            return "templates/listOfAccountContract.jrxml";
+        } else {
+            return "templates/listOfAccountContractFrench.jrxml";
+        }
+    }
 
     public static String getSingleStatmentTemplate(String legalEntityId){
         if (legalEntityId.equalsIgnoreCase("GM2700001") || legalEntityId.equalsIgnoreCase("SL6940001")) {
