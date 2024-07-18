@@ -27,11 +27,11 @@ public class ReportController {
         return Responder.success(reportService.downloadCSV(contractRequestDTO));
     }
 
-//    @PostMapping("/downloadExcelReport")
-//    public ResponseEntity<DefaultResponse> getReportsExcel(
-//            @RequestHeader("legalEntityId") String legalEntityId,
-//            @RequestBody ContractRequestDTO contractRequestDTO) {
-//        contractRequestDTO.setLegalEntityId(legalEntityId);
-//        return Responder.success(reportService.downloadExcel(contractRequestDTO));
-//    }
+    @PostMapping("/downloadExcelReport")
+    public ResponseEntity<DefaultResponse> getReportsExcel(
+            @RequestHeader("legalEntityId") String legalEntityId,
+            @RequestBody ContractRequestDTO contractRequestDTO) {
+        contractRequestDTO.setLegalEntityId(legalEntityId);
+        return Responder.success(reportService.downloadExcel(contractRequestDTO));
+    }
 }
