@@ -28,4 +28,11 @@ public class CustomerReportController {
         return Responder.success(customerReportService.downloadCustomerReport(combinedStatementRequestDTO));
     }
 
+    @PostMapping("/downloadCustomerCsv")
+    public ResponseEntity<DefaultResponse> downloadCustomerCsv(
+            @RequestHeader("legalEntityId") String legalEntityId,
+            @RequestBody CombinedStatementRequestDTO combinedStatementRequestDTO) {
+        combinedStatementRequestDTO.setLegalEntityId(legalEntityId);
+        return Responder.success(customerReportService.downloadCustomerReportCsv(combinedStatementRequestDTO));
+    }
 }

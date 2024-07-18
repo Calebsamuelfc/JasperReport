@@ -75,6 +75,57 @@ public class CustomerReportServiceImpl implements CustomerReportService {
         return null;
     }
 
+    @Override
+    public ServiceResponse downloadCustomerReportCsv(CombinedStatementRequestDTO combinedStatementRequestDTO) {
+        byte[] base64Data;
+        byte[] decodedBytes = Base64.getDecoder().decode(combinedStatementRequestDTO.getBase64String());
+
+        String decodedString = new String(decodedBytes);
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode rootNode = objectMapper.readTree(decodedString);
+
+            StringWriter csvWriterString = new StringWriter();
+            // Write headers
+            try (CSVWriter csvWriter = new CSVWriter(csvWriterString)) {
+                // Write headers
+                String[] headers = getHeaders(rootNode.get("vista_customers_list_view").get(0));
+                String[] newHeaders = convertHeaders(headers, combinedStatementRequestDTO.getLegalEntityId());
+                csvWriter.writeNext(newHeaders);
+                // Write data
+                for (JsonNode node : rootNode.get("vista_customers_list_view")) {
+                    String[] data = getData(node, headers);
+                    csvWriter.writeNext(translateStatus(data,combinedStatementRequestDTO.getLegalEntityId()));
+                }
+            }
+
+            // Get the CSV data as a string
+            String csvData = csvWriterString.toString();
+
+            byte[] csvBytes = csvData.getBytes();
+
+            base64Data = Base64.getEncoder().encode(csvBytes);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ServiceResponse.builder()
+                    .base64String("")
+                    .responseStatus("failure")
+                    .responseCode("500")
+                    .fileFormat("CSV")
+                    .build();
+        }
+
+        String base64StringResponse = new String(base64Data);
+        System.out.println(base64StringResponse);
+        return ServiceResponse.builder()
+                .base64String(base64StringResponse)
+                .responseStatus("success")
+                .responseCode("200")
+                .fileFormat("CSV")
+                .build();
+    }
+
 
     public static List<CustomerReportInfo> getCustomerReport(CombinedStatementRequestDTO combinedStatementRequestDTO) {
             List<CustomerReportInfo> customerReportList = new ArrayList<>();
@@ -136,6 +187,69 @@ public class CustomerReportServiceImpl implements CustomerReportService {
             return customerReportList;
         }
 
+    private static String[] getHeaders(JsonNode node) {
+        Iterator<String> fieldNames = node.fieldNames();
+        String[] headers = new String[node.size()];
+        int idx = 0;
+        while (fieldNames.hasNext()) {
+            headers[idx++] = fieldNames.next();
+        }
+        return headers;
+    }
+    private static String[] convertHeaders(String[] headers, String legalEntityId) {
+        Locale locale;
+        if (legalEntityId.equalsIgnoreCase("SL6940001") || legalEntityId.equalsIgnoreCase("GM2700001")) {
+            locale = Locale.ENGLISH;
+        } else {
+            locale = Locale.FRENCH;
+        }
+
+        String[] translatedHeaders = new String[headers.length];
+
+        for (int i = 0; i < headers.length; i++) {
+            String head = headers[i];
+            translatedHeaders[i] = switch (head) {
+                case "Email" -> Translation.EMAIL.getTranslation(locale).toUpperCase();
+                case "CustomerType" -> Translation.CUSTOMERTYPE.getTranslation(locale).toUpperCase();
+                case "Name" -> Translation.CUSTOMERNAME.getTranslation(locale).toUpperCase();
+                case "EnrollmentDate" -> Translation.ENROLLMENTDATE.getTranslation(locale).toUpperCase();
+                case "UserName" -> Translation.USERNAME.getTranslation(locale).toUpperCase();
+                case "CustomerStatus" -> Translation.CUSTOMERSTATUS.getTranslation(locale).toUpperCase();
+                case "PhoneNo" -> Translation.TELEPHONE.getTranslation(locale).toUpperCase();
+                case "CompanyLegalUnit" -> Translation.COMPANYLEGALUNIT.getTranslation(locale).toUpperCase();
+                default -> head.toUpperCase();
+            };
+        }
+
+        return translatedHeaders;
+    }
+    private static String[] getData(JsonNode node, String[] headers) {
+        Iterator<String> fieldNames = node.fieldNames();
+        String[] data = new String[node.size()];
+        int idx = 0;
+        while (fieldNames.hasNext()) {
+            String text = node.get(fieldNames.next()).asText();
+            data[idx++] = text;
+        }
+
+        for(int i = 0; i < headers.length; i++){
+            String head = headers[i];
+            if(head.equals("Email")){
+                data[i] = Masker.maskEmail(data[i]);
+            }
+            if(head.equals("PhoneNo")){
+                data[i] = Masker.maskPhoneNumber(data[i]);
+            }
+        }
+        return data;
+    }
+    private static String[] translateStatus(String[] dataArray, String legalEntityId){
+        String[] status = new String[dataArray.length];
+        for(int i = 0; i < dataArray.length; i++){
+            status[i] = translateStatus(dataArray[i],legalEntityId);
+        }
+        return status;
+    }
 
     private static String translateStatus(String status, String legalEntityId) {
         Locale locale;
