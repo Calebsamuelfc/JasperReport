@@ -35,4 +35,12 @@ public class CustomerReportController {
         combinedStatementRequestDTO.setLegalEntityId(legalEntityId);
         return Responder.success(customerReportService.downloadCustomerReportCsv(combinedStatementRequestDTO));
     }
+
+    @PostMapping("/downloadCustomerExcel")
+    public ResponseEntity<DefaultResponse> downloadCustomerExcel(
+            @RequestHeader("legalEntityId") String legalEntityId,
+            @RequestBody CombinedStatementRequestDTO combinedStatementRequestDTO) {
+        combinedStatementRequestDTO.setLegalEntityId(legalEntityId);
+        return Responder.success(customerReportService.downloadCustomerReportExcel(combinedStatementRequestDTO));
+    }
 }

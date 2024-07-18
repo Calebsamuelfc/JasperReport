@@ -126,6 +126,71 @@ public class CustomerReportServiceImpl implements CustomerReportService {
                 .build();
     }
 
+    @Override
+    public ServiceResponse downloadCustomerReportExcel(CombinedStatementRequestDTO combinedStatementRequestDTO) {
+        byte[] excelData;
+        try {
+            byte[] decodedBytes = Base64.getDecoder().decode(combinedStatementRequestDTO.getBase64String());
+            String decodedString = new String(decodedBytes);
+
+            XSSFWorkbook xSSFWorkbook = new XSSFWorkbook();
+            XSSFSheet sheet = xSSFWorkbook.createSheet("Data");
+
+            // Parse the JSON string
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode rootNode = objectMapper.readTree(decodedString);
+
+            // Create header row
+            Row headerRow = sheet.createRow(0);
+            int columnIndex = 0;
+            String[] headers = getHeaders(rootNode.get("vista_customers_list_view").get(0));
+            String[] newHeaders = convertHeaders(headers, combinedStatementRequestDTO.getLegalEntityId());
+            for (String key : newHeaders) {
+                Cell cell = headerRow.createCell(columnIndex++);
+                cell.setCellValue(key);
+            }
+
+            // Create data rows
+            int rowIndex = 1;
+            for (JsonNode node : rootNode.get("vista_customers_list_view")) {
+                columnIndex = 0;
+                String[] data = getData(node, headers);
+                Row dataRow = sheet.createRow(rowIndex++);
+                for (String key : data) {
+                    Cell cell = dataRow.createCell(columnIndex++);
+                    cell.setCellValue(translateStatus(key, combinedStatementRequestDTO.getLegalEntityId()));
+                }
+            }
+
+            // Write the Excel data to a ByteArrayOutputStream
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            xSSFWorkbook.write(outputStream);
+            excelData = outputStream.toByteArray();
+
+            xSSFWorkbook.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ServiceResponse.builder()
+                    .base64String("")
+                    .responseStatus("failure")
+                    .responseCode("500")
+                    .fileFormat("XLSX")
+                    .build();
+        }
+
+        // Encode the Excel data as Base64
+        String base64String = Base64.getEncoder().encodeToString(excelData);
+
+        System.out.println(base64String);
+        return ServiceResponse.builder()
+                .base64String(base64String)
+                .responseStatus("success")
+                .responseCode("200")
+                .fileFormat("XLSX")
+                .build();
+    }
+
 
     public static List<CustomerReportInfo> getCustomerReport(CombinedStatementRequestDTO combinedStatementRequestDTO) {
             List<CustomerReportInfo> customerReportList = new ArrayList<>();
