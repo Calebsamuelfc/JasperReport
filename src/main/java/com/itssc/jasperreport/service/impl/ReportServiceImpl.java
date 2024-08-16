@@ -109,6 +109,7 @@ public class ReportServiceImpl implements ReportService {
                     .responseStatus("failure")
                     .responseCode("500")
                     .fileFormat("XLSX")
+                    .title("excelData")
                     .build();
         }
         return ServiceResponse.builder()
@@ -116,6 +117,7 @@ public class ReportServiceImpl implements ReportService {
                 .responseStatus("success")
                 .responseCode("200")
                 .fileFormat("XLSX")
+                .title("excelData")
                 .build();
     }
 
