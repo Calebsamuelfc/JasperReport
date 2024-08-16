@@ -27,4 +27,22 @@ public class ViewContractController {
         ContractRequestDTO.setLegalEntityId(legalEntityId);
         return Responder.success(viewContractService.viewContractPdf(ContractRequestDTO));
     }
+
+    @PostMapping("/downloadMyContractCsv")
+    public ResponseEntity<DefaultResponse> viewContractCsv(
+            @RequestHeader("legalEntityId") String legalEntityId,
+            @RequestBody ContractRequestDTO ContractRequestDTO) {
+
+        ContractRequestDTO.setLegalEntityId(legalEntityId);
+        return Responder.success(viewContractService.viewContractCsv(ContractRequestDTO));
+    }
+
+    @PostMapping("/downloadMyContractExcel")
+    public ResponseEntity<DefaultResponse> viewContractExcel(
+            @RequestHeader("legalEntityId") String legalEntityId,
+            @RequestBody ContractRequestDTO ContractRequestDTO) {
+
+        ContractRequestDTO.setLegalEntityId(legalEntityId);
+        return Responder.success(viewContractService.viewContractExcel(ContractRequestDTO));
+    }
 }
